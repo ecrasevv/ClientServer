@@ -1,2 +1,6 @@
-server: main.c
-	gcc -o server main.c
+server: src/server.c
+	gcc -o server src/server.c
+
+client: src/client.c
+	gcc -o client src/client.c
+

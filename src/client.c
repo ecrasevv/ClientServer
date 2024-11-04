@@ -1,6 +1,6 @@
 
 /** Client side 
-*
+* connect() -> connect the client socket to the address specified by the second arg of the SC 
 */
 
 #include <arpa/inet.h>
@@ -13,15 +13,18 @@
 #include <unistd.h>
 
 #define PORT        8080
-#define SERVER_IP   "127.0.0.1" /* localhost */
-#define BUFFER_SIZE 1024
+
+// specify the ip of the server 
+#define SERVER_IP        "127.0.0.1" 
+#define BUFFER_SIZE      1024
+#define MAX_MESSAGE_SIZE 50
 struct sockaddr_in server_address;
 
 int main (int argv, const char** argc) {
     // utils for client / server connection 
     int     server_socket_fd;
     int     connection_status;
-    char*   client_message = "are you up server?";
+    char    client_message[MAX_MESSAGE_SIZE];
     char    buffer[BUFFER_SIZE]; 
     ssize_t bytes_readed; 
 
@@ -46,12 +49,15 @@ int main (int argv, const char** argc) {
         exit(1);
     }
     printf("client connected to the server\n");
-    
+   
+    printf("print a message\n");
+    fgets(client_message, MAX_MESSAGE_SIZE, stdin); 
+
     if (send(client_socket_fd, client_message, strlen(client_message), 0) == -1) {
         perror("client send error.");
         exit(1);
     }
-
+ 
     printf("client sended the message. [%s]\n", client_message);
 
     if ((bytes_readed = read(client_socket_fd, buffer, sizeof(buffer))) == -1) {

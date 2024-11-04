@@ -3,7 +3,7 @@
  *  socket() -> create new socket
  *  bind()   -> attach socket to port
  *  listen() -> setup the socket queue
- *  accept() -> accept connections
+ *  accept() -> accept connections, first arg create a new socket for the client, first arg doesn't care about this call
  *  send()   -> send data
  *  recv()   -> recive data
  *  close()  -> close connection
@@ -20,23 +20,23 @@
 #include <unistd.h>
 
 #define PORT        8080
-#define MAX_CLIENTS 50
+#define MAX_CLIENTS 5 
 #define BUFFER_SIZE 1024
 
 struct sockaddr_in server_address, client_address;
 
 int main (int argv, const char** argc) {
     // utils for client connection
-    int       client_socket_fd;
-    char      buffer[BUFFER_SIZE] = {0};
-    ssize_t   bytes_read;
-    socklen_t client_addrlen = sizeof(client_address);
+    int         client_socket_fd;
+    char        buffer[BUFFER_SIZE] = {0};
+    ssize_t     bytes_read;
+    socklen_t   client_addrlen = sizeof(client_address);
 
-    // server message
-    char*     server_message = "hello from server.";
+    // utils for server
+    char*       server_message = "hello from server.";
+    int         server_socket_fd;
+    int         number_of_connections = 0;
 
-    // setup the server socket
-    int server_socket_fd;
     if ((server_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("server socket failed.");
         exit(1);
@@ -51,7 +51,7 @@ int main (int argv, const char** argc) {
         perror("server binding failed.");
         exit(1);
     }
-
+ 
     // listening 
     if ((listen(server_socket_fd, MAX_CLIENTS) == -1)) {
         perror("server listen failed.");
@@ -59,25 +59,30 @@ int main (int argv, const char** argc) {
     }
     printf("server listening for request...\n");
 
-    // TODO accept more connections
-    if ((client_socket_fd = accept(server_socket_fd, (struct sockaddr*)&client_address, &client_addrlen)) == -1) {
-        perror("server accept client connection failed.");
-        exit(1);
-    }
-    printf("server recived a connection!\n");
+    for (int i = 0; i < MAX_CLIENTS; ++i ) {
+        if ((client_socket_fd = accept(server_socket_fd, (struct sockaddr*)&client_address, &client_addrlen)) == -1) {
+            perror("server accept client connection failed.");
+            exit(1);
+        }
 
-    if ((bytes_read = read(client_socket_fd, buffer, sizeof(buffer))) == -1) {
-        perror("server read error.");
-        exit(1);
-    }
+        printf("server recived a connection!\n");
 
-    printf("SERVER READ: %s\n", buffer);
+        number_of_connections++;
 
-    if (send(client_socket_fd, server_message, strlen(server_message), 0) == -1) {
-        perror("server send error.");
-        exit(1);
+        if ((bytes_read = read(client_socket_fd, buffer, sizeof(buffer))) == -1) {
+            perror("server read error.");
+            exit(1);
+        }
+
+        printf("SERVER READ: %s\n", buffer);
+
+        if (send(client_socket_fd, server_message, strlen(server_message), 0) == -1) {
+            perror("server send error.");
+            exit(1);
+        }
+        printf("server sended the message. [%s]\n", server_message);
     }
-    printf("server sended the message. [%s]\n", server_message);
+    printf("total connections handled by server: %d\n", number_of_connections);
 
     close(server_socket_fd);
     close(client_socket_fd);

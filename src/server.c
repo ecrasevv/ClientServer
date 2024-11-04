@@ -18,10 +18,16 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdbool.h>
 
-#define PORT        8080
+#define PORT        25325
 #define MAX_CLIENTS 5 
 #define BUFFER_SIZE 1024
+
+const char* BANNED_WORD            = "test";
+const char* WARNING_SERVER_MESSAGE = "Calm Down!";
+
+bool Parse_Client_Message(const char* message);
 
 struct sockaddr_in server_address, client_address;
 
@@ -57,8 +63,9 @@ int main (int argv, const char** argc) {
         perror("server listen failed.");
         exit(1);
     }
-    printf("server listening for request...\n");
+    printf("Server listening on port %d\n", PORT);
 
+    // handle connections
     for (int i = 0; i < MAX_CLIENTS; ++i ) {
         if ((client_socket_fd = accept(server_socket_fd, (struct sockaddr*)&client_address, &client_addrlen)) == -1) {
             perror("server accept client connection failed.");
@@ -74,13 +81,22 @@ int main (int argv, const char** argc) {
             exit(1);
         }
 
-        printf("SERVER READ: %s\n", buffer);
+        printf("SERVER READ: %s [%zd]\n", buffer, bytes_read);
 
-        if (send(client_socket_fd, server_message, strlen(server_message), 0) == -1) {
-            perror("server send error.");
-            exit(1);
+        if (Parse_Client_Message(buffer)){
+            printf("Client said the BANNED_WORD!\n");
+            if (send(client_socket_fd, WARNING_SERVER_MESSAGE, strlen(WARNING_SERVER_MESSAGE), 0) == -1) {
+                perror("server send error.");
+                exit(1);
+            }
+            close(client_socket_fd);
+        } else {
+            if (send(client_socket_fd, server_message, strlen(server_message), 0) == -1) {
+                perror("server send error.");
+                exit(1);
+            }
+            printf("server sended the message. [%s]\n", server_message);
         }
-        printf("server sended the message. [%s]\n", server_message);
     }
     printf("total connections handled by server: %d\n", number_of_connections);
 
@@ -89,3 +105,12 @@ int main (int argv, const char** argc) {
 
     return 0;
 }
+
+bool Parse_Client_Message (const char* message) {
+    if (strstr(message, BANNED_WORD) != NULL) {
+        return true; 
+    } else {
+        return false;
+    }
+}
+

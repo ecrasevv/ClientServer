@@ -12,12 +12,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define PORT        8080
-
-// specify the ip of the server 
 #define SERVER_IP        "127.0.0.1" 
+#define PORT             25325
 #define BUFFER_SIZE      1024
 #define MAX_MESSAGE_SIZE 50
+
 struct sockaddr_in server_address;
 
 int main (int argv, const char** argc) {
@@ -58,7 +57,7 @@ int main (int argv, const char** argc) {
         exit(1);
     }
  
-    printf("client sended the message. [%s]\n", client_message);
+    printf("client sended the message. [%s] \n", client_message);
 
     if ((bytes_readed = read(client_socket_fd, buffer, sizeof(buffer))) == -1) {
         perror("client read error.");

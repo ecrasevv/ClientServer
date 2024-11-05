@@ -1,5 +1,6 @@
 # Client-Server
-A simple C Client-Server implementation in C.  
+A simple Client-Server implementation in C.
+
 Not finished.  
 
 ## TODO

@@ -2,7 +2,7 @@
 A simple C Client-Server implementation in C.  
 Not finished.  
 
-## TODO:
-- allow multiple connections
-
+## TODO
+- Create a thread for each client connection
+- Allows the client to send multiple messages
 

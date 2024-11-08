@@ -13,26 +13,26 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define MAX_PORT            65535
-#define MAX_IP              20    /* 15 + '\0' */
-#define BUFFER_SIZE         1024
-#define CLIENT_MESSAGE_SIZE 50
+#define MAX_PORT                65535
+#define MAX_IP                  20    /* 15 + '\0' */
+#define BUFFER_SIZE             1024
+#define CLIENT_MESSAGE_SIZE     50
 
 struct sockaddr_in server_address;
 
 typedef struct {
-    char     server_ip[MAX_IP];
-    uint16_t server_port;
+    char        server_ip[MAX_IP];
+    uint16_t    server_port;
+    int         timeout; 
 } config;
 
 void configure_client (config*, struct sockaddr_in*);
 
 int main (int argv, const char** argc) {
-    int     server_socket_fd;
-    int     connection_status;
-    char    client_message[CLIENT_MESSAGE_SIZE];
-    char    buffer[BUFFER_SIZE]; 
-    ssize_t bytes_readed; 
+    int         connection_status;
+    char        client_message[CLIENT_MESSAGE_SIZE];
+    char        buffer[BUFFER_SIZE]; 
+    ssize_t     bytes_readed; 
 
     // setup the client socket
     int client_socket_fd;
@@ -76,15 +76,14 @@ int main (int argv, const char** argc) {
     printf("[<-] client recived: %s\n", buffer);
 
     close(client_socket_fd);
-    close(server_socket_fd);
 
     return 0;
 }
 
 void configure_client (config* client_config, struct sockaddr_in* server_address) {
-    char  port_buffer[MAX_PORT];
-    char  ip_buffer[MAX_IP];
-    char* endptr;
+    char    port_buffer[MAX_PORT];
+    char    ip_buffer[MAX_IP];
+    char*   endptr;
     
     server_address->sin_family = AF_INET;
 

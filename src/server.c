@@ -63,7 +63,7 @@ int main (int argv, const char** argc) {
             exit(1);
         }
 
-        inet_ntop(AF_INET, &client_address, client_ip_address, CLIENT_IP_BUFFER_SIZE);
+        inet_ntop(AF_INET, (struct in_addr*)&client_address.sin_addr, client_ip_address, CLIENT_IP_BUFFER_SIZE);
         printf("[+] server recived a connection from %s!\n", client_ip_address);
         number_of_connections++;
 

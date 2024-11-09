@@ -18,44 +18,66 @@ const char* BLANK_MSG_FROM_CLIENT  = "you sent a blank message, terminating";
 const char* BANNED_WORD            = "test";
 const char* WARNING_SERVER_MESSAGE = "Calm Down!";
 
-bool parse_client_message(const char* message);
-
 struct sockaddr_in server_address, client_address;
 
+void configure_server(int*);
+void handle_connections(int);
+bool parse_client_message(const char*);
+
 int main (int argv, const char** argc) {
-    // utils for client connection
-    int         client_socket_fd;
-    char        client_message_buffer[CLIENT_MESSAGE_BUFFER_SIZE];
-    char        client_ip_address[CLIENT_IP_BUFFER_SIZE];
-    ssize_t     bytes_read;
-    socklen_t   client_addrlen = sizeof(client_address);
+    int server_socket_fd;
+    // config the server
+    configure_server(&server_socket_fd);
 
-    // utils for server
-    char*       server_message = "hello from server.";
-    int         server_socket_fd;
-    int         number_of_connections = 0;
+    printf("[+] server listening on port %d\n", PORT);
 
-    if ((server_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    // clients connections
+    handle_connections(server_socket_fd);
+
+    close(server_socket_fd);
+
+    return 0;
+}
+
+void configure_server (int *server_socket_fd) {
+    if ((*server_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("server socket failed");
         exit(1);
     }
 
-    server_address.sin_family      = AF_INET;               /* match the socket() */
-    server_address.sin_port        = htons(PORT);           /* specify port to listen on */
-    server_address.sin_addr.s_addr = htonl(INADDR_ANY);     /* the server can accept connection on any interface */
+    server_address.sin_family      = AF_INET;               
+    server_address.sin_port        = htons(PORT);           
+    server_address.sin_addr.s_addr = htonl(INADDR_ANY);     
 
     // binding
-    if ((bind(server_socket_fd, (struct sockaddr*)&server_address, sizeof(server_address))) == -1) {
+    if ((bind(*server_socket_fd, (struct sockaddr*)&server_address, sizeof(server_address))) == -1) {
         perror("server binding failed");
         exit(1);
     }
 
     // listening 
-    if ((listen(server_socket_fd, MAX_CLIENTS) == -1)) {
+    if ((listen(*server_socket_fd, MAX_CLIENTS) == -1)) {
         perror("server listen failed");
         exit(1);
     }
-    printf("[+] server listening on port %d\n", PORT);
+}
+
+bool parse_client_message (const char* message) {
+    if (strstr(message, BANNED_WORD) != NULL) {
+        return true; 
+    } else {
+        return false;
+    }
+}
+
+void handle_connections (int server_socket_fd) {
+    int         client_socket_fd;
+    int         number_of_connections = 0;
+    char        client_message_buffer[CLIENT_MESSAGE_BUFFER_SIZE];
+    char        client_ip_address[CLIENT_IP_BUFFER_SIZE];
+    ssize_t     bytes_read;
+    socklen_t   client_addrlen = sizeof(client_address);
+    char*       server_message = "hello from server.";
 
     // handle connections
     for (int i = 0; i < MAX_CLIENTS; ++i ) {
@@ -107,18 +129,8 @@ int main (int argv, const char** argc) {
             printf("[->] server sended the message. [%s]\n", server_message);
         }
     }
-
+    
+    // close sockets
     close(server_socket_fd);
     close(client_socket_fd);
-
-    return 0;
 }
-
-bool parse_client_message (const char* message) {
-    if (strstr(message, BANNED_WORD) != NULL) {
-        return true; 
-    } else {
-        return false;
-    }
-}
-

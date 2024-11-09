@@ -67,6 +67,10 @@ int main (int argv, const char** argc) {
         perror("client read error");
         exit(1);
     }
+
+    if (bytes_readed > 0) {
+        buffer[bytes_readed] = '\0';
+    }
     printf("[<-] client recived: %s\n", buffer);
 
     close(client_socket_fd);

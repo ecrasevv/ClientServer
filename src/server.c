@@ -1,14 +1,3 @@
-
-/** Server side
- *  socket() -> create new socket
- *  bind()   -> attach socket to port
- *  listen() -> setup the socket queue
- *  accept() -> accept connections, first arg create a new socket for the client, first arg doesn't care about this call
- *  send()   -> send data
- *  recv()   -> recive data
- *  close()  -> close connection
- */
-
 #include <netinet/in.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -20,9 +9,10 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#define PORT        25325
-#define MAX_CLIENTS 5 
-#define BUFFER_SIZE 1024
+#define PORT                       25325
+#define MAX_CLIENTS                5 
+#define CLIENT_MESSAGE_BUFFER_SIZE 1024
+#define CLIENT_IP_BUFFER_SIZE      20
 
 const char* BANNED_WORD            = "test";
 const char* WARNING_SERVER_MESSAGE = "Calm Down!";
@@ -34,7 +24,8 @@ struct sockaddr_in server_address, client_address;
 int main (int argv, const char** argc) {
     // utils for client connection
     int         client_socket_fd;
-    char        buffer[BUFFER_SIZE];
+    char        client_message_buffer[CLIENT_MESSAGE_BUFFER_SIZE];
+    char        client_ip_address[CLIENT_IP_BUFFER_SIZE];
     ssize_t     bytes_read;
     socklen_t   client_addrlen = sizeof(client_address);
 
@@ -57,7 +48,7 @@ int main (int argv, const char** argc) {
         perror("server binding failed");
         exit(1);
     }
- 
+
     // listening 
     if ((listen(server_socket_fd, MAX_CLIENTS) == -1)) {
         perror("server listen failed");
@@ -72,25 +63,29 @@ int main (int argv, const char** argc) {
             exit(1);
         }
 
-        printf("[+] server recived a connection!\n");
-
+        inet_ntop(AF_INET, &client_address, client_ip_address, CLIENT_IP_BUFFER_SIZE);
+        printf("[+] server recived a connection from %s!\n", client_ip_address);
         number_of_connections++;
 
-        if ((bytes_read = read(client_socket_fd, buffer, sizeof(buffer))) == -1) {
+        // read
+        if ((bytes_read = read(client_socket_fd, client_message_buffer, CLIENT_MESSAGE_BUFFER_SIZE)) == -1) {
             perror("server read error");
             exit(1);
         }
 
-        buffer[strcspn(buffer, "\n")] = 0;
-        printf("[<-] server read: %s [%zd]\n", buffer, bytes_read);
+        client_message_buffer[strcspn(client_message_buffer, "\n")] = 0;
+        printf("[<-] server read: %s [%zd]\n", client_message_buffer, bytes_read);
 
-        if (Parse_Client_Message(buffer)){
+        // send
+        if (Parse_Client_Message(client_message_buffer)){
             printf("[!] client said the BANNED_WORD!\n");
             if (send(client_socket_fd, WARNING_SERVER_MESSAGE, strlen(WARNING_SERVER_MESSAGE), 0) == -1) {
                 perror("server send error");
                 exit(1);
             }
             close(client_socket_fd);
+        } else if (bytes_read == 0) {
+            printf("[+] the client sent a blank message or crash\n");
         } else {
             if (send(client_socket_fd, server_message, strlen(server_message), 0) == -1) {
                 perror("server send error");
@@ -99,7 +94,6 @@ int main (int argv, const char** argc) {
             printf("[->] server sended the message. [%s]\n", server_message);
         }
     }
-    printf("[+] total connections handled by server: %d\n", number_of_connections);
 
     close(server_socket_fd);
     close(client_socket_fd);

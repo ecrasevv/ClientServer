@@ -9,15 +9,16 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#define PORT                       25325
+#define PORT                       9090
 #define MAX_CLIENTS                5 
 #define CLIENT_MESSAGE_BUFFER_SIZE 1024
 #define CLIENT_IP_BUFFER_SIZE      20
 
+const char* BLANK_MSG_FROM_CLIENT  = "you sent a blank message, terminating";
 const char* BANNED_WORD            = "test";
 const char* WARNING_SERVER_MESSAGE = "Calm Down!";
 
-bool Parse_Client_Message(const char* message);
+bool parse_client_message(const char* message);
 
 struct sockaddr_in server_address, client_address;
 
@@ -76,16 +77,28 @@ int main (int argv, const char** argc) {
         client_message_buffer[strcspn(client_message_buffer, "\n")] = 0;
         printf("[<-] server read: %s [%zd]\n", client_message_buffer, bytes_read);
 
-        // send
-        if (Parse_Client_Message(client_message_buffer)){
+        /**
+        * send
+        */
+
+        // banned word from client check 
+        if (parse_client_message(client_message_buffer)){
             printf("[!] client said the BANNED_WORD!\n");
             if (send(client_socket_fd, WARNING_SERVER_MESSAGE, strlen(WARNING_SERVER_MESSAGE), 0) == -1) {
                 perror("server send error");
                 exit(1);
             }
             close(client_socket_fd);
-        } else if (bytes_read == 0) {
+        } 
+
+        // blank message from client check
+        if (strcmp(client_message_buffer, "") == 0) {
             printf("[+] the client sent a blank message or crash\n");
+            if (send(client_socket_fd, BLANK_MSG_FROM_CLIENT, strlen(BLANK_MSG_FROM_CLIENT), 0) == -1) {
+                perror("server send error");
+                exit(1);
+            }
+            close(client_socket_fd);
         } else {
             if (send(client_socket_fd, server_message, strlen(server_message), 0) == -1) {
                 perror("server send error");
@@ -101,7 +114,7 @@ int main (int argv, const char** argc) {
     return 0;
 }
 
-bool Parse_Client_Message (const char* message) {
+bool parse_client_message (const char* message) {
     if (strstr(message, BANNED_WORD) != NULL) {
         return true; 
     } else {

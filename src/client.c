@@ -1,8 +1,3 @@
-
-/** Client side 
-* connect() -> connect the client socket to the address specified by the second arg of the SC 
-*/
-
 #include <arpa/inet.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -29,13 +24,13 @@ typedef struct {
 void configure_client (config*, struct sockaddr_in*);
 
 int main (int argv, const char** argc) {
+    int         client_socket_fd;
     int         connection_status;
     char        client_message[CLIENT_MESSAGE_SIZE];
     char        buffer[BUFFER_SIZE]; 
     ssize_t     bytes_readed; 
 
     // setup the client socket
-    int client_socket_fd;
     if ((client_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("client socket failed");
         exit(1);
@@ -51,7 +46,7 @@ int main (int argv, const char** argc) {
         exit(1);
     }
     printf("[+] client connected to the server\n");
-  
+
     // send
     printf("[+] print a message: ");
     if (fgets(client_message, CLIENT_MESSAGE_SIZE, stdin) == NULL) {
@@ -63,7 +58,7 @@ int main (int argv, const char** argc) {
         perror("client send error");
         exit(1);
     }
- 
+
     client_message[strcspn(client_message, "\n")] = 0;
     printf("[->] client sended the message. [%s] \n", client_message);
 
@@ -72,7 +67,6 @@ int main (int argv, const char** argc) {
         perror("client read error");
         exit(1);
     }
-
     printf("[<-] client recived: %s\n", buffer);
 
     close(client_socket_fd);
@@ -84,7 +78,7 @@ void configure_client (config* client_config, struct sockaddr_in* server_address
     char    port_buffer[MAX_PORT];
     char    ip_buffer[MAX_IP];
     char*   endptr;
-    
+
     server_address->sin_family = AF_INET;
 
     printf("[+] configure client\n");
@@ -111,7 +105,7 @@ void configure_client (config* client_config, struct sockaddr_in* server_address
         perror("client failed server_port config");
         exit(1);
     }
-    client_config->server_port = strtoul(port_buffer, &endptr, 10);
+    client_config->server_port  = strtoul(port_buffer, &endptr, 10);
     server_address->sin_port    = htons(client_config->server_port);
 }
 

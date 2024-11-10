@@ -25,8 +25,8 @@ void handle_connections(int);
 bool parse_client_message(const char*);
 
 int main (int argv, const char** argc) {
-    int server_socket_fd;
     // config the server
+    int server_socket_fd;
     configure_server(&server_socket_fd);
 
     printf("[+] server listening on port %d\n", PORT);
@@ -104,23 +104,21 @@ void handle_connections (int server_socket_fd) {
         */
 
         // banned word from client check 
-        if (parse_client_message(client_message_buffer)){
+        if (parse_client_message(client_message_buffer)) {
             printf("[!] client said the BANNED_WORD!\n");
             if (send(client_socket_fd, WARNING_SERVER_MESSAGE, strlen(WARNING_SERVER_MESSAGE), 0) == -1) {
                 perror("server send error");
                 exit(1);
             }
-            close(client_socket_fd);
-        } 
-
-        // blank message from client check
-        if (strcmp(client_message_buffer, "") == 0) {
+            continue;
+        // blank message from client
+        } else if (strcmp(client_message_buffer, "") == 0) {
             printf("[+] the client sent a blank message or crash\n");
             if (send(client_socket_fd, BLANK_MSG_FROM_CLIENT, strlen(BLANK_MSG_FROM_CLIENT), 0) == -1) {
                 perror("server send error");
                 exit(1);
             }
-            close(client_socket_fd);
+        // valid message from client
         } else {
             if (send(client_socket_fd, server_message, strlen(server_message), 0) == -1) {
                 perror("server send error");
@@ -128,9 +126,8 @@ void handle_connections (int server_socket_fd) {
             }
             printf("[->] server sended the message. [%s]\n", server_message);
         }
+        close(client_socket_fd);
     }
     
-    // close sockets
     close(server_socket_fd);
-    close(client_socket_fd);
 }

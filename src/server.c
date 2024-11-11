@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#define PORT                       9090
+#define PORT                       9999
 #define MAX_CLIENTS                5 
 #define CLIENT_MESSAGE_BUFFER_SIZE 1024
 #define CLIENT_IP_BUFFER_SIZE      20
@@ -73,8 +73,8 @@ bool parse_client_message (const char* message) {
 void handle_connections (int server_socket_fd) {
     int         client_socket_fd;
     int         number_of_connections = 0;
-    char        client_message_buffer[CLIENT_MESSAGE_BUFFER_SIZE];
-    char        client_ip_address[CLIENT_IP_BUFFER_SIZE];
+    char*       client_message_buffer = malloc(CLIENT_MESSAGE_BUFFER_SIZE * sizeof(char));
+    char*       client_ip_address = malloc(CLIENT_IP_BUFFER_SIZE * sizeof(char));
     ssize_t     bytes_read;
     socklen_t   client_addrlen = sizeof(client_address);
     char*       server_message = "hello from server.";
@@ -111,14 +111,14 @@ void handle_connections (int server_socket_fd) {
                 exit(1);
             }
             continue;
-        // blank message from client
+            // blank message from client
         } else if (strcmp(client_message_buffer, "") == 0) {
             printf("[+] the client sent a blank message or crash\n");
             if (send(client_socket_fd, BLANK_MSG_FROM_CLIENT, strlen(BLANK_MSG_FROM_CLIENT), 0) == -1) {
                 perror("server send error");
                 exit(1);
             }
-        // valid message from client
+            // valid message from client
         } else {
             if (send(client_socket_fd, server_message, strlen(server_message), 0) == -1) {
                 perror("server send error");
@@ -128,6 +128,8 @@ void handle_connections (int server_socket_fd) {
         }
         close(client_socket_fd);
     }
-    
+
     close(server_socket_fd);
+    free(client_message_buffer);
+    free(client_ip_address);
 }

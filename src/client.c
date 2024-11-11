@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -26,8 +27,8 @@ void configure_client (config*, struct sockaddr_in*);
 int main (int argv, const char** argc) {
     int         client_socket_fd;
     int         connection_status;
+    char        buffer[BUFFER_SIZE];
     char        client_message[CLIENT_MESSAGE_SIZE];
-    char        buffer[BUFFER_SIZE]; 
     ssize_t     bytes_readed; 
 
     // setup the client socket
@@ -71,6 +72,7 @@ int main (int argv, const char** argc) {
     if (bytes_readed > 0) {
         buffer[bytes_readed] = '\0';
     }
+
     printf("[<-] client recived: %s\n", buffer);
 
     close(client_socket_fd);
@@ -79,8 +81,8 @@ int main (int argv, const char** argc) {
 }
 
 void configure_client (config* client_config, struct sockaddr_in* server_address) {
-    char    port_buffer[MAX_PORT];
-    char    ip_buffer[MAX_IP];
+    char*   port_buffer = malloc(MAX_PORT * sizeof(char));
+    char*   ip_buffer = malloc(MAX_IP * sizeof(char));
     char*   endptr;
 
     server_address->sin_family = AF_INET;

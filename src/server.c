@@ -71,13 +71,13 @@ bool parse_client_message (const char* message) {
 }
 
 void handle_connections (int server_socket_fd) {
-    int         client_socket_fd;
-    int         number_of_connections = 0;
-    char*       client_message_buffer = malloc(CLIENT_MESSAGE_BUFFER_SIZE * sizeof(char));
-    char*       client_ip_address = malloc(CLIENT_IP_BUFFER_SIZE * sizeof(char));
-    ssize_t     bytes_read;
-    socklen_t   client_addrlen = sizeof(client_address);
-    char*       server_message = "hello from server.";
+    int       client_socket_fd;
+    int       number_of_connections = 0;
+    char*     client_message_buffer = malloc(CLIENT_MESSAGE_BUFFER_SIZE * sizeof(char));
+    char*     client_ip_address = malloc(CLIENT_IP_BUFFER_SIZE * sizeof(char));
+    ssize_t   bytes_read;
+    socklen_t client_addrlen = sizeof(client_address);
+    char*     server_message = "hello from server.";
 
     // handle connections
     for (int i = 0; i < MAX_CLIENTS; ++i ) {

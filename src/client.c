@@ -9,27 +9,27 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define MAX_PORT                65535
-#define MAX_IP                  20    /* 15 + '\0' */
-#define BUFFER_SIZE             1024
-#define CLIENT_MESSAGE_SIZE     50
+#define MAX_PORT            65535
+#define MAX_IP              20    /* 15 + '\0' */
+#define BUFFER_SIZE         1024
+#define CLIENT_MESSAGE_SIZE 50
 
 struct sockaddr_in server_address;
 
 typedef struct {
-    char        server_ip[MAX_IP];
-    uint16_t    server_port;
-    int         timeout; 
+    char     server_ip[MAX_IP];
+    uint16_t server_port;
+    int      timeout; 
 } config;
 
 void configure_client (config*, struct sockaddr_in*);
 
 int main (int argv, const char** argc) {
-    int         client_socket_fd;
-    int         connection_status;
-    char        buffer[BUFFER_SIZE];
-    char        client_message[CLIENT_MESSAGE_SIZE];
-    ssize_t     bytes_readed; 
+    int     client_socket_fd;
+    int     connection_status;
+    char    buffer[BUFFER_SIZE];
+    char    client_message[CLIENT_MESSAGE_SIZE];
+    ssize_t bytes_readed; 
 
     // setup the client socket
     if ((client_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -81,9 +81,9 @@ int main (int argv, const char** argc) {
 }
 
 void configure_client (config* client_config, struct sockaddr_in* server_address) {
-    char*   port_buffer = malloc(MAX_PORT * sizeof(char));
-    char*   ip_buffer = malloc(MAX_IP * sizeof(char));
-    char*   endptr;
+    char* port_buffer = malloc(MAX_PORT * sizeof(char));
+    char* ip_buffer = malloc(MAX_IP * sizeof(char));
+    char* endptr;
 
     server_address->sin_family = AF_INET;
 
@@ -96,7 +96,7 @@ void configure_client (config* client_config, struct sockaddr_in* server_address
         perror("client failed server_ip config");
         exit(1);
     }
-    ip_buffer[strcspn(ip_buffer, "\n")] = 0;     /* remove '\n' */
+    ip_buffer[strcspn(ip_buffer, "\n")] = 0;     
     strcpy(client_config->server_ip, ip_buffer);
 
     if (inet_pton(AF_INET, client_config->server_ip, &server_address->sin_addr.s_addr) <= 0) {
@@ -111,8 +111,8 @@ void configure_client (config* client_config, struct sockaddr_in* server_address
         perror("client failed server_port config");
         exit(1);
     }
-    client_config->server_port  = strtoul(port_buffer, &endptr, 10);
-    server_address->sin_port    = htons(client_config->server_port);
+    client_config->server_port = strtoul(port_buffer, &endptr, 10);
+    server_address->sin_port   = htons(client_config->server_port);
 }
 
 

@@ -114,11 +114,3 @@ void configure_client (config* client_config, struct sockaddr_in* server_address
     client_config->server_port = strtoul(port_buffer, &endptr, 10);
     server_address->sin_port   = htons(client_config->server_port);
 }
-
-
-
-
-
-
-
-

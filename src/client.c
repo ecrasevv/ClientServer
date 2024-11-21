@@ -22,13 +22,15 @@ typedef struct {
     int      timeout; 
 } config;
 
+enum client_request_type{FILE_REQ, TEXT_REQ};
+
 void configure_client (config*, struct sockaddr_in*);
+void client_send(int);
 
 int main (int argv, const char** argc) {
     int     client_socket_fd;
     int     connection_status;
     char    buffer[BUFFER_SIZE];
-    char    client_message[CLIENT_MESSAGE_SIZE];
     ssize_t bytes_readed; 
 
     // setup the client socket
@@ -49,19 +51,7 @@ int main (int argv, const char** argc) {
     printf("[+] client connected to the server\n");
 
     // send
-    printf("[+] print a message: ");
-    if (fgets(client_message, CLIENT_MESSAGE_SIZE, stdin) == NULL) {
-        perror("client send message failed");
-        exit(1);
-    }
-
-    if (send(client_socket_fd, client_message, strlen(client_message), 0) == -1) {
-        perror("client send error");
-        exit(1);
-    }
-
-    client_message[strcspn(client_message, "\n")] = 0;
-    printf("[->] client sended the message. [%s] \n", client_message);
+    client_send(client_socket_fd);
 
     // read
     if ((bytes_readed = read(client_socket_fd, buffer, sizeof(buffer))) == -1) {
@@ -71,9 +61,10 @@ int main (int argv, const char** argc) {
 
     if (bytes_readed > 0) {
         buffer[bytes_readed] = '\0';
+        printf("[<-] client recived: %s\n", buffer);
+    } else {
+        printf("[!] server may crashed, client recived nothing\n");
     }
-
-    printf("[<-] client recived: %s\n", buffer);
 
     close(client_socket_fd);
 
@@ -113,4 +104,46 @@ void configure_client (config* client_config, struct sockaddr_in* server_address
     }
     client_config->server_port = strtoul(port_buffer, &endptr, 10);
     server_address->sin_port   = htons(client_config->server_port);
+}
+
+void client_send(int client_socket_fd)
+{   
+    char client_message[CLIENT_MESSAGE_SIZE];
+    char client_req_type; 
+
+    printf("[+] 0. request for a file \t 1. simple message to the server\n");
+
+    // read the user choice from stdin
+    if ((client_req_type = fgetc(stdin)) == EOF) {
+        perror("fgetc fail");
+        exit(1);
+    }
+
+    // getchar() holds a char
+    // != EOF in case of stdin redirection
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {}
+
+    if (atoi(&client_req_type) == TEXT_REQ) {
+        // simple text
+        printf("[+] print a message: ");
+        if (fgets(client_message, CLIENT_MESSAGE_SIZE, stdin) == NULL) {
+            perror("client send message failed");
+            exit(1);
+        }
+
+        if (send(client_socket_fd, client_message, strlen(client_message), 0) == -1) {
+            perror("client send error");
+            exit(1);
+        }
+    } else {
+        // request for a file
+        if (send(client_socket_fd, "filefile", strlen("filefile"), 0) == -1) {
+            perror("client send error");
+            exit(1);
+        }
+    }
+
+    client_message[strcspn(client_message, "\n")] = 0;
+    printf("[->] client sended the message. [%s] \n", client_message);
 }

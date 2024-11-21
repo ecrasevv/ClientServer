@@ -1,0 +1,2 @@
+This is a simple text file.
+The server will send the content of this file to the client. 

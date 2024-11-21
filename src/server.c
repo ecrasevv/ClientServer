@@ -24,7 +24,8 @@ void configure_server(int*);
 void handle_connections(int);
 bool parse_client_message(const char*);
 
-int main (int argv, const char** argc) {
+int main (int argv, const char** argc)
+{
     // config the server
     int server_socket_fd;
     configure_server(&server_socket_fd);
@@ -39,7 +40,8 @@ int main (int argv, const char** argc) {
     return 0;
 }
 
-void configure_server (int *server_socket_fd) {
+void configure_server (int *server_socket_fd)
+{
     if ((*server_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("server socket failed");
         exit(1);
@@ -62,7 +64,8 @@ void configure_server (int *server_socket_fd) {
     }
 }
 
-bool parse_client_message (const char* message) {
+bool parse_client_message (const char* message)
+{
     if (strstr(message, BANNED_WORD) != NULL) {
         return true; 
     } else {
@@ -70,7 +73,8 @@ bool parse_client_message (const char* message) {
     }
 }
 
-void handle_connections (int server_socket_fd) {
+void handle_connections (int server_socket_fd)
+{
     int       client_socket_fd;
     int       number_of_connections = 0;
     char*     client_message_buffer = malloc(CLIENT_MESSAGE_BUFFER_SIZE * sizeof(char));

@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#define PORT                       9999
+#define PORT                       5556
 #define MAX_CLIENTS                5 
 #define CLIENT_MESSAGE_BUFFER_SIZE 1024
 #define CLIENT_IP_BUFFER_SIZE      20
@@ -113,8 +113,14 @@ void handle_connections (int server_socket_fd) {
             continue;
             // blank message from client
         } else if (strcmp(client_message_buffer, "") == 0) {
-            printf("[+] the client sent a blank message or crash\n");
+            printf("[!] the client sent a blank message or crash\n");
             if (send(client_socket_fd, BLANK_MSG_FROM_CLIENT, strlen(BLANK_MSG_FROM_CLIENT), 0) == -1) {
+                perror("server send error");
+                exit(1);
+            }
+            // file request
+        } else if (strcmp(client_message_buffer, "filefile") == 0) {
+            if (send(client_socket_fd, "client request for a file", strlen("client request for a file"), 0) == -1) {
                 perror("server send error");
                 exit(1);
             }

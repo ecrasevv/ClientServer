@@ -27,7 +27,8 @@ enum client_request_type{FILE_REQ, TEXT_REQ};
 void configure_client (config*, struct sockaddr_in*);
 void client_send(int);
 
-int main (int argv, const char** argc) {
+int main (int argv, const char** argc)
+{
     int     client_socket_fd;
     int     connection_status;
     char    buffer[BUFFER_SIZE];
@@ -71,7 +72,8 @@ int main (int argv, const char** argc) {
     return 0;
 }
 
-void configure_client (config* client_config, struct sockaddr_in* server_address) {
+void configure_client (config* client_config, struct sockaddr_in* server_address)
+{
     char* port_buffer = malloc(MAX_PORT * sizeof(char));
     char* ip_buffer = malloc(MAX_IP * sizeof(char));
     char* endptr;

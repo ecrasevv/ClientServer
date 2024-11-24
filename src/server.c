@@ -8,21 +8,26 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <assert.h>
+#include <dirent.h>
 
 #define PORT                       9999
 #define MAX_CLIENTS                5 
 #define CLIENT_MESSAGE_BUFFER_SIZE 1024
 #define CLIENT_IP_BUFFER_SIZE      20
+#define SERVER_FOLDER_PATH         "youre path"
 
 const char* BLANK_MSG_FROM_CLIENT  = "you sent a blank message, terminating";
 const char* BANNED_WORD            = "test";
 const char* WARNING_SERVER_MESSAGE = "Calm Down!";
 
 struct sockaddr_in server_address, client_address;
+struct dirent* server_directory;
 
 void configure_server(int*);
 void handle_connections(int);
 bool parse_client_message(const char*);
+int check_for_file(const char*);
 
 int main (int argv, const char** argc)
 {
@@ -82,6 +87,7 @@ void handle_connections (int server_socket_fd)
     ssize_t   bytes_read;
     socklen_t client_addrlen = sizeof(client_address);
     char*     server_message = "hello from server.";
+    char*     file_content;
 
     // handle connections
     for (int i = 0; i < MAX_CLIENTS; ++i ) {
@@ -125,9 +131,17 @@ void handle_connections (int server_socket_fd)
             // file request
         } else if (client_message_buffer[0] == 'F') {
             printf("[F] client request for a file\n");
-            if (send(client_socket_fd, "searching for the file...", strlen("searching for the file..."), 0) == -1) {
-                perror("server send error");
-                exit(1);
+            printf("[F] searching for the file...\n");
+
+            if (check_for_file(client_message_buffer) == 0) {
+                printf("[F] file found, sending content\n");
+                // send file content
+                if (send(client_socket_fd, "searching for the file...", strlen("searching for the file..."), 0) == -1) {
+                    perror("server send error");
+                    exit(1);
+                } 
+            } else {
+                printf("[F] file not found, terminating\n");
             }
             // valid message from client
         } else {
@@ -139,8 +153,39 @@ void handle_connections (int server_socket_fd)
         }
         close(client_socket_fd);
     }
-
     close(server_socket_fd);
     free(client_message_buffer);
     free(client_ip_address);
+}
+
+int check_for_file(const char* file_name) 
+{
+    char buffer[20];
+    bool found = false;
+    int  j = 0;
+
+    // remove 'F'
+    for (int i = 1; i < strlen(file_name); i++) {
+        buffer[j] = file_name[i];
+        j++;
+    }
+    buffer[j] = '\0';
+
+    // read the folder content
+    DIR* folder;
+    folder = opendir(SERVER_FOLDER_PATH);
+
+    while((server_directory = readdir(folder)) != NULL) {
+        if (strcmp(server_directory->d_name, buffer) == 0) {
+            found = true;
+        }
+    }
+
+    if (!found) {
+        printf("[F] file: %s not found\n", buffer);
+        return -1;
+    }
+
+    closedir(folder);
+    return 0;
 }

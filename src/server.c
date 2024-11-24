@@ -11,15 +11,15 @@
 #include <assert.h>
 #include <dirent.h>
 
-#define PORT                       8999
+#define PORT                       7999
 #define MAX_CLIENTS                5 
 #define CLIENT_MESSAGE_BUFFER_SIZE 1024
 #define CLIENT_IP_BUFFER_SIZE      20
-#define SERVER_FOLDER_PATH         "/home/ecrasevvv/LearnNewStuff/C/ClientServer/server_files"
 
-const char* BLANK_MSG_FROM_CLIENT  = "you sent a blank message, terminating";
-const char* BANNED_WORD            = "test";
-const char* WARNING_SERVER_MESSAGE = "Calm Down!";
+const char* BLANK_MSG_FROM_CLIENT   = "you sent a blank message, terminating";
+const char* BANNED_WORD             = "test";
+const char* WARNING_SERVER_MESSAGE  = "Calm Down!";
+char        SERVER_FOLDER_PATH[100] = "/home/ecrasevvv/LearnNewStuff/C/ClientServer/server_files/";
 
 struct sockaddr_in server_address, client_address;
 struct dirent* server_directory;
@@ -27,7 +27,9 @@ struct dirent* server_directory;
 void configure_server(int*);
 void handle_connections(int);
 bool parse_client_message(const char*);
-int check_for_file(const char*);
+char* parse_and_check_for_file(const char*);
+void append_char_to_str(char*, char);
+char* get_file_content(char*);
 
 int main (int argv, const char** argc)
 {
@@ -88,6 +90,7 @@ void handle_connections (int server_socket_fd)
     socklen_t client_addrlen = sizeof(client_address);
     char*     server_message = "hello from server.";
     char*     file_content;
+    char*     result_file_name;
 
     // handle connections
     for (int i = 0; i < MAX_CLIENTS; ++i ) {
@@ -133,10 +136,11 @@ void handle_connections (int server_socket_fd)
             printf("[F] client request for a file\n");
             printf("[F] searching for the file...\n");
 
-            if (check_for_file(client_message_buffer) == 0) {
-                printf("[F] file found, sending content\n");
+            if ((result_file_name = parse_and_check_for_file(client_message_buffer)) != NULL) {
+                printf("[F] file found (%s), sending content\n", result_file_name);
+                file_content = get_file_content(result_file_name);
                 // send file content
-                if (send(client_socket_fd, "searching for the file...", strlen("searching for the file..."), 0) == -1) {
+                if (send(client_socket_fd, file_content, strlen(file_content), 0) == -1) {
                     perror("server send error");
                     exit(1);
                 } 
@@ -162,9 +166,9 @@ void handle_connections (int server_socket_fd)
     free(client_ip_address);
 }
 
-int check_for_file(const char* file_name) 
+char* parse_and_check_for_file(const char* file_name) 
 {
-    char buffer[20];
+    char* buffer = malloc(1);
     bool found = false;
     int  j = 0;
 
@@ -187,9 +191,45 @@ int check_for_file(const char* file_name)
 
     if (!found) {
         printf("[F] file: %s not found\n", buffer);
-        return -1;
+        return NULL;
     }
 
     closedir(folder);
-    return 0;
+    return buffer;
 }
+
+void append_char_to_str(char* str, char c)
+{
+    size_t len = strlen(str);
+    str[len] = c;
+    str[len + 1] = '\0';
+}
+
+char* get_file_content(char* file_name)
+{
+    char* path = malloc(strlen(SERVER_FOLDER_PATH) + strlen(file_name) + 1);
+    // build the absolute path
+    snprintf(path, strlen(SERVER_FOLDER_PATH) + strlen(file_name) + 1, "%s%s", SERVER_FOLDER_PATH, file_name); 
+
+    char* content = malloc(3000);
+    content[0] = '\0';
+
+    // get content from the file
+    FILE* file_;
+    if ((file_ = fopen(path, "r")) == NULL) {
+        perror("fopen fail");
+        free(content);
+        free(path);
+        exit(1);
+    }
+
+    char c;
+    while ((c = fgetc(file_)) != EOF) {
+        append_char_to_str(content, c);
+    }
+
+    free(path);
+    fclose(file_);
+    return content;
+}
+

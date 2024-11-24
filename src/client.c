@@ -113,7 +113,7 @@ void client_send(int client_socket_fd)
 {   
     char client_message[CLIENT_MESSAGE_SIZE];
     char buffer[CLIENT_FN_SIZE];
-    char base[CLIENT_FN_SIZE] = "F";
+    char client_file_name_request[CLIENT_FN_SIZE] = "F";
     char client_req_type; 
 
     printf("[+] 0. request for a file \t 1. simple message to the server\n");
@@ -146,17 +146,17 @@ void client_send(int client_socket_fd)
     } else {
         // request for a file
         printf("[F] type the file name: ");
+
         if ((fgets(buffer, CLIENT_FN_SIZE, stdin)) != NULL) {
             buffer[strcspn(buffer, "\n")] = '\0';
-            strcat(base, buffer);
-            printf("\n DDD: %s\n", base);
+            strcat(client_file_name_request, buffer);
         } else {
             perror("client fgets file name fail");
             exit(1);
         }
-        printf("[->] client request for: [%s] \n", base);
+        printf("[->] client request for: [%s] [%lu]\n", client_file_name_request, strlen(client_file_name_request));
        
-        if (send(client_socket_fd, base, strlen(base), 0) == -1) {
+        if (send(client_socket_fd, client_file_name_request, strlen(client_file_name_request), 0) == -1) {
             perror("client send error");
             exit(1);
         }

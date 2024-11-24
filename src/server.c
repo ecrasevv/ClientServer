@@ -11,11 +11,11 @@
 #include <assert.h>
 #include <dirent.h>
 
-#define PORT                       9999
+#define PORT                       8999
 #define MAX_CLIENTS                5 
 #define CLIENT_MESSAGE_BUFFER_SIZE 1024
 #define CLIENT_IP_BUFFER_SIZE      20
-#define SERVER_FOLDER_PATH         "youre path"
+#define SERVER_FOLDER_PATH         "/home/ecrasevvv/LearnNewStuff/C/ClientServer/server_files"
 
 const char* BLANK_MSG_FROM_CLIENT  = "you sent a blank message, terminating";
 const char* BANNED_WORD            = "test";
@@ -142,6 +142,10 @@ void handle_connections (int server_socket_fd)
                 } 
             } else {
                 printf("[F] file not found, terminating\n");
+                if (send(client_socket_fd, "file not found.", strlen("file not found."), 0) == -1) {
+                    perror("server send error");
+                    exit(1);
+                } 
             }
             // valid message from client
         } else {

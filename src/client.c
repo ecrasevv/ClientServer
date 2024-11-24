@@ -13,6 +13,7 @@
 #define MAX_IP              20    /* 15 + '\0' */
 #define BUFFER_SIZE         1024
 #define CLIENT_MESSAGE_SIZE 50
+#define CLIENT_FN_SIZE      100
 
 struct sockaddr_in server_address;
 
@@ -111,6 +112,8 @@ void configure_client (config* client_config, struct sockaddr_in* server_address
 void client_send(int client_socket_fd)
 {   
     char client_message[CLIENT_MESSAGE_SIZE];
+    char buffer[CLIENT_FN_SIZE];
+    char base[CLIENT_FN_SIZE] = "F";
     char client_req_type; 
 
     printf("[+] 0. request for a file \t 1. simple message to the server\n");
@@ -138,14 +141,24 @@ void client_send(int client_socket_fd)
             perror("client send error");
             exit(1);
         }
+        client_message[strcspn(client_message, "\n")] = 0;
+        printf("[->] client send message. [%s] \n", client_message);
     } else {
         // request for a file
-        if (send(client_socket_fd, "filefile", strlen("filefile"), 0) == -1) {
+        printf("[F] type the file name: ");
+        if ((fgets(buffer, CLIENT_FN_SIZE, stdin)) != NULL) {
+            buffer[strcspn(buffer, "\n")] = '\0';
+            strcat(base, buffer);
+            printf("\n DDD: %s\n", base);
+        } else {
+            perror("client fgets file name fail");
+            exit(1);
+        }
+        printf("[->] client request for: [%s] \n", base);
+       
+        if (send(client_socket_fd, base, strlen(base), 0) == -1) {
             perror("client send error");
             exit(1);
         }
     }
-
-    client_message[strcspn(client_message, "\n")] = 0;
-    printf("[->] client sended the message. [%s] \n", client_message);
 }

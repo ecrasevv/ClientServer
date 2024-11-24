@@ -1,7 +1,8 @@
 # Client-Server
-Not finished.  
-A simple Client-Server implementation in C.
+A simple implementation of the Client-Server model in C.  
+The server accepts text messages and requests for text files. 
+Messages sent by the client are parsed and moderated by the server.  
 
-## TODO
-- Create a thread for each client connection
+Not finished.
+
 
